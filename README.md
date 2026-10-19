@@ -4,12 +4,15 @@ Chrome extension that adds a seek bar, speed buttons, keyboard shortcuts, and a 
 
 ## Install
 
-1. Open `chrome://extensions`
-2. Turn on **Developer mode** (top right)
-3. Click **Load unpacked** and pick this folder
-4. Reload any open Instagram tabs
+1. Download `video-scrubber-vX.Y.Z.zip` from the [latest release](https://github.com/AndoArmy/video-scrubber/releases/latest) and unzip it. Keep the folder somewhere permanent (not Downloads): Chrome loads the extension from it every time.
+2. Open `chrome://extensions`
+3. Turn on **Developer mode** (top right)
+4. Click **Load unpacked** and pick the unzipped `video-scrubber` folder
+5. Reload any open Instagram / TikTok tabs
 
-After editing a file: hit the reload arrow on the extension card in `chrome://extensions`, then reload the page.
+Chrome may show a "developer mode extensions" notice on startup. That's expected for extensions not installed from the Chrome Web Store.
+
+**Updating:** download the new zip, replace the folder's contents, then hit the reload arrow on the extension card in `chrome://extensions` and reload the page.
 
 ## Use
 
