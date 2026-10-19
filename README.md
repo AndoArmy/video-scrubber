@@ -1,6 +1,6 @@
 # Video Scrubber
 
-Chrome extension that adds a seek bar, speed buttons, keyboard shortcuts, and a frame strip to any video on sites that hide them (Instagram, TikTok, YouTube Shorts, Facebook, X). Built for skimming: see what a video is and what happens in it in a few seconds.
+Chrome extension that adds a seek bar, speed buttons, keyboard shortcuts, and a frame strip to videos on Instagram, TikTok, and Facebook. It stays off on every other site. Built for skimming: see what a video is and what happens in it in a few seconds.
 
 ## Install
 
@@ -42,5 +42,5 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 
 ## Files
 
-- `manifest.json` — Manifest V3, one content script on all sites, `storage` permission only
+- `manifest.json` — Manifest V3, one content script on Instagram, TikTok, and Facebook only (add a site by adding its pattern to `matches`), `storage` permission only
 - `content.js` — everything: picks the active video, draws the bar in a shadow root (so site CSS can't break it), handles keys and the frame strip
