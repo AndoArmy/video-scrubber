@@ -11,7 +11,11 @@
   const PICK_INTERVAL = 150; // ms between "which video is active" checks
 
   let speed = 1;
-  let soundPref = null; // null = leave the site's mute alone; 'on' / 'off' once the user picks via our button
+  let soundPref = 'on'; // sound on by default; 'off' once the user mutes (our button, M, or the site's own button)
+  let unmuteBlocked = false; // Chrome refused an unmute; wait for the first click or key press
+  let activeSince = 0;
+  let lastGesture = 0;
+  let gestureSound = null; // the active video's sound state at the moment of the last click / key press
   let hidden = false;
   let active = null;
   let pointer = { x: -1, y: -1 };
@@ -181,6 +185,7 @@
   function setActive(v) {
     if (v === active) return;
     active = v;
+    activeSince = performance.now();
     if (active && active.playbackRate !== speed) active.playbackRate = speed;
     if (active) applySound(active);
     showStrip();
@@ -213,41 +218,75 @@
     else active.pause();
   }
 
-  // Chrome pauses a video that unmutes itself before the user has interacted with the page,
-  // so a remembered "sound on" only applies after the first click or key press.
+  const soundOf = (v) => (v.muted || v.volume === 0 ? 'off' : 'on');
+
+  // Chrome lets a page unmute its own video only after the user has clicked or pressed a key
+  // there, or on sites they often watch with sound. Otherwise it pauses the video (or blocks its
+  // autoplay), so: never unmute a paused video before that, undo an unmute Chrome refuses, and
+  // retry on the first click / key press.
   function applySound(v) {
-    if (!soundPref) return;
-    const muted = soundPref === 'off';
-    if (v.muted === muted) return;
-    if (!muted && !navigator.userActivation?.hasBeenActive) return;
-    v.muted = muted;
+    if (previewing) return;
+    if (soundPref === 'off') {
+      v.muted = true;
+      return;
+    }
+    if (v.volume === 0) v.volume = 1;
+    if (!v.muted) return;
+    const activated = navigator.userActivation?.hasBeenActive;
+    if (!activated && (unmuteBlocked || v.paused)) return;
+    v.muted = false;
+    if (activated) return;
+    const undo = () => {
+      if (!v.paused || v.muted) return;
+      unmuteBlocked = true;
+      v.muted = true;
+      v.play().catch(() => {});
+    };
+    undo();
+    setTimeout(undo, 50);
+  }
+
+  // Called every frame for the active video. A sound change right after the user's click or key
+  // press on a video they've been watching is their choice (the site's own mute button or volume
+  // slider), so we adopt it. Any other mismatch is the site muting on its own (Instagram mutes
+  // each new reel), so we put the user's choice back.
+  function syncSound(v) {
+    const now = performance.now();
+    const state = soundOf(v);
+    if (state === soundPref) return;
+    if (!previewing && now - lastGesture < 500 && now - activeSince > 1000 && gestureSound && state !== gestureSound) {
+      soundPref = state;
+      try {
+        chrome.storage.local.set({ soundPref });
+      } catch {}
+      return;
+    }
+    applySound(v);
   }
 
   function toggleMute() {
     if (!active) return;
-    soundPref = active.muted ? 'on' : 'off';
-    active.muted = soundPref === 'off';
+    soundPref = soundOf(active) === 'off' ? 'on' : 'off';
+    applySound(active);
     try {
       chrome.storage.local.set({ soundPref });
     } catch {}
   }
 
-  // Once a sound choice exists, the site's own mute button updates it too (only right after a
-  // real click, so the site muting the next video on its own doesn't count).
-  document.addEventListener(
-    'volumechange',
-    (e) => {
-      if (!soundPref || previewing || !(e.target instanceof HTMLVideoElement)) return;
-      if (!navigator.userActivation?.isActive) return;
-      const next = e.target.muted ? 'off' : 'on';
-      if (next === soundPref) return;
-      soundPref = next;
-      try {
-        chrome.storage.local.set({ soundPref });
-      } catch {}
-    },
-    true
-  );
+  for (const type of ['pointerdown', 'keydown']) {
+    window.addEventListener(
+      type,
+      () => {
+        lastGesture = performance.now();
+        gestureSound = active ? soundOf(active) : null;
+        if (unmuteBlocked) {
+          unmuteBlocked = false;
+          if (active) applySound(active);
+        }
+      },
+      true
+    );
+  }
 
   playBtn.addEventListener('click', togglePlay);
   muteBtn.addEventListener('click', toggleMute);
@@ -443,6 +482,7 @@
     if (active && active.isConnected && !hidden) {
       // Some players reset the rate on their own; keep ours.
       if (!previewing && active.playbackRate !== speed) active.playbackRate = speed;
+      syncSound(active);
       if (strips.has(active) && strip.hidden !== (strips.get(active).src !== active.currentSrc)) showStrip();
       host.style.display = 'block';
       place();

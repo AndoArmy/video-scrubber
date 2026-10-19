@@ -35,7 +35,7 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 ## Behavior notes
 
 - **Speed** carries over to every next video and survives reloads.
-- **Sound** is never touched until you use the bar's mute button (or `M`). After that your choice carries over to the next videos. Instagram's own mute button also updates it. Chrome blocks a video from unmuting itself before you click anything on a fresh page, so sound only gets forced on after your first click.
+- **Sound** is on by default: when Instagram or TikTok starts a reel muted, the extension unmutes it. Mute with the bar's button, `M`, or the site's own mute button, and every next video stays muted until you turn sound back on. Chrome only lets a page play sound after you've clicked or pressed a key on it, so on a freshly opened tab the first video plays muted until your first click (except on sites Chrome already trusts with sound because you watch there a lot).
 - On Instagram, `←` / `→` override Instagram's own "previous / next post" arrows while a video is active.
 - The bar covers Instagram's small mute icon in the bottom corner. The bar's own mute button replaces it.
 - Nothing leaves your computer. Only speed and sound choices are saved, in Chrome's local extension storage.
