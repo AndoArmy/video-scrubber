@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Video Scrubber",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Seek bar, speed control, and a frame strip for videos on Instagram, TikTok, and Facebook.",
   "permissions": ["storage"],
   "content_scripts": [

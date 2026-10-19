@@ -16,6 +16,8 @@
   let activeSince = 0;
   let lastGesture = 0;
   let gestureSound = null; // the active video's sound state at the moment of the last click / key press
+  let gesturePaused = null; // ...and whether it was paused then
+  let lastPlayToggle = 0;
   let hidden = false;
   let active = null;
   let pointer = { x: -1, y: -1 };
@@ -248,13 +250,22 @@
 
   // Called every frame for the active video. A sound change right after the user's click or key
   // press on a video they've been watching is their choice (the site's own mute button or volume
-  // slider), so we adopt it. Any other mismatch is the site muting on its own (Instagram mutes
-  // each new reel), so we put the user's choice back.
+  // slider), so we adopt it. Any other mismatch is the site muting on its own, so we put the
+  // user's choice back. Instagram mutes each new reel, and re-mutes a video every time it resumes
+  // from pause, so a click that also played or paused the video never counts as a mute choice.
   function syncSound(v) {
     const now = performance.now();
     const state = soundOf(v);
     if (state === soundPref) return;
-    if (!previewing && now - lastGesture < 500 && now - activeSince > 1000 && gestureSound && state !== gestureSound) {
+    const userChoice =
+      !previewing &&
+      now - lastGesture < 500 &&
+      now - activeSince > 1000 &&
+      now - lastPlayToggle > 300 &&
+      gestureSound &&
+      state !== gestureSound &&
+      v.paused === gesturePaused;
+    if (userChoice) {
       soundPref = state;
       try {
         chrome.storage.local.set({ soundPref });
@@ -279,6 +290,7 @@
       () => {
         lastGesture = performance.now();
         gestureSound = active ? soundOf(active) : null;
+        gesturePaused = active ? active.paused : null;
         if (unmuteBlocked) {
           unmuteBlocked = false;
           if (active) applySound(active);
@@ -303,8 +315,17 @@
     'play',
     (e) => {
       if (!(e.target instanceof HTMLVideoElement)) return;
+      if (e.target === active) lastPlayToggle = performance.now();
       if (e.target.playbackRate !== speed) e.target.playbackRate = speed;
       if (!previewing) applySound(e.target);
+    },
+    true
+  );
+
+  document.addEventListener(
+    'pause',
+    (e) => {
+      if (e.target === active) lastPlayToggle = performance.now();
     },
     true
   );
