@@ -27,6 +27,7 @@ The bar sits at the bottom of the video under your mouse (or the one mostly on s
 | `S` | Cycle speed (1x, 1.5x, 2x, 3x, 4x) |
 | `K` | Play / pause |
 | `M` | Sound on / off |
+| Hover the speaker icon | Volume slider. Drag it, or scroll the mouse wheel over the speaker (5% per notch). |
 | `H` | Hide / show the bar |
 | **Preview** | Grabs 8 frames from across the video (1–3 seconds). Click a frame to jump there. |
 
@@ -35,6 +36,7 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 ## Behavior notes
 
 - **Speed** carries over to every next video and survives reloads.
+- **Volume** level is remembered and applied to every next video, even when the site resets it. Dragging to 0 mutes; turning sound back on returns to your last level.
 - **Sound** is on by default: when Instagram or TikTok starts a reel muted, the extension unmutes it. Mute with the bar's button, `M`, or the site's own mute button, and every next video stays muted until you turn sound back on. Chrome only lets a page play sound after you've clicked or pressed a key on it, so on a freshly opened tab the first video plays muted until your first click (except on sites Chrome already trusts with sound because you watch there a lot).
 - On Instagram, `←` / `→` override Instagram's own "previous / next post" arrows while a video is active.
 - The bar covers Instagram's small mute icon in the bottom corner. The bar's own mute button replaces it.

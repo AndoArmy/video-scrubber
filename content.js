@@ -12,6 +12,7 @@
 
   let speed = 1;
   let soundPref = 'on'; // sound on by default; 'off' once the user mutes (our button, M, or the site's own button)
+  let volumePref = 1; // 0.01–1, the level used whenever sound is on
   let unmuteBlocked = false; // Chrome refused an unmute; wait for the first click or key press
   let activeSince = 0;
   let lastGesture = 0;
@@ -71,6 +72,15 @@
       .icon svg { width: 14px; height: 14px; fill: #fff; }
       .icon .alt, .icon.flip .main { display: none; }
       .icon.flip .alt { display: block; }
+      .vol { display: flex; align-items: center; }
+      .volume {
+        width: 0; margin: 0; opacity: 0; accent-color: #ffd400; cursor: pointer;
+        visibility: hidden; pointer-events: none; /* collapsed slider must not steal the speaker's clicks */
+        transition: width 0.15s, opacity 0.15s, margin 0.15s, visibility 0.15s;
+      }
+      .vol:hover .volume, .volume:focus {
+        width: 70px; margin-left: 6px; opacity: 1; visibility: visible; pointer-events: auto;
+      }
       .speeds { display: flex; gap: 2px; margin-left: auto; }
       button {
         font: inherit; color: #fff; background: rgba(255, 255, 255, 0.12);
@@ -90,10 +100,13 @@
           <svg class="main" viewBox="0 0 16 16"><rect x="3" y="2" width="3.5" height="12"/><rect x="9.5" y="2" width="3.5" height="12"/></svg>
           <svg class="alt" viewBox="0 0 16 16"><path d="M4 2l10 6-10 6z"/></svg>
         </button>
-        <button class="icon mute" title="Sound on / off (M). Your choice carries over to the next videos.">
-          <svg class="main" viewBox="0 0 16 16"><path d="M2 6h3l4-3.5v11L5 10H2z"/><path d="M11 5.2a4 4 0 010 5.6M12.8 3.4a6.5 6.5 0 010 9.2" stroke="#fff" stroke-width="1.4" fill="none"/></svg>
-          <svg class="alt" viewBox="0 0 16 16"><path d="M2 6h3l4-3.5v11L5 10H2z"/><path d="M11 5.5l4 5m0-5l-4 5" stroke="#fff" stroke-width="1.4"/></svg>
-        </button>
+        <div class="vol">
+          <button class="icon mute" title="Sound on / off (M). Hover for volume; scroll over it to adjust. Carries over to the next videos.">
+            <svg class="main" viewBox="0 0 16 16"><path d="M2 6h3l4-3.5v11L5 10H2z"/><path d="M11 5.2a4 4 0 010 5.6M12.8 3.4a6.5 6.5 0 010 9.2" stroke="#fff" stroke-width="1.4" fill="none"/></svg>
+            <svg class="alt" viewBox="0 0 16 16"><path d="M2 6h3l4-3.5v11L5 10H2z"/><path d="M11 5.5l4 5m0-5l-4 5" stroke="#fff" stroke-width="1.4"/></svg>
+          </button>
+          <input class="volume" type="range" min="0" max="1" step="0.01" value="1" title="Volume">
+        </div>
         <span class="time">0:00 / 0:00</span>
         <div class="speeds">
           ${SPEEDS.map((s) => `<button data-speed="${s}">${s}x</button>`).join('')}
@@ -114,6 +127,8 @@
   const previewBtn = $('.preview');
   const playBtn = $('.play');
   const muteBtn = $('.mute');
+  const volWrap = $('.vol');
+  const volSlider = $('.volume');
   const speedBtns = [...root.querySelectorAll('[data-speed]')];
 
   // Keep our clicks away from the site (Instagram closes posts on outside clicks, etc.).
@@ -221,6 +236,15 @@
   }
 
   const soundOf = (v) => (v.muted || v.volume === 0 ? 'off' : 'on');
+  // Sound state including the level, so a volume change counts as a change too.
+  const soundKey = (v) => (soundOf(v) === 'off' ? 'off' : v.volume.toFixed(2));
+  const wantedKey = () => (soundPref === 'off' ? 'off' : volumePref.toFixed(2));
+
+  function saveSound() {
+    try {
+      chrome.storage.local.set({ soundPref, volumePref });
+    } catch {}
+  }
 
   // Chrome lets a page unmute its own video only after the user has clicked or pressed a key
   // there, or on sites they often watch with sound. Otherwise it pauses the video (or blocks its
@@ -232,7 +256,7 @@
       v.muted = true;
       return;
     }
-    if (v.volume === 0) v.volume = 1;
+    if (Math.abs(v.volume - volumePref) > 0.005) v.volume = volumePref;
     if (!v.muted) return;
     const activated = navigator.userActivation?.hasBeenActive;
     if (!activated && (unmuteBlocked || v.paused)) return;
@@ -255,8 +279,8 @@
   // from pause, so a click that also played or paused the video never counts as a mute choice.
   function syncSound(v) {
     const now = performance.now();
-    const state = soundOf(v);
-    if (state === soundPref) return;
+    const state = soundKey(v);
+    if (state === wantedKey()) return;
     const userChoice =
       !previewing &&
       now - lastGesture < 500 &&
@@ -266,10 +290,12 @@
       state !== gestureSound &&
       v.paused === gesturePaused;
     if (userChoice) {
-      soundPref = state;
-      try {
-        chrome.storage.local.set({ soundPref });
-      } catch {}
+      if (state === 'off') soundPref = 'off';
+      else {
+        soundPref = 'on';
+        volumePref = v.volume;
+      }
+      saveSound();
       return;
     }
     applySound(v);
@@ -279,17 +305,41 @@
     if (!active) return;
     soundPref = soundOf(active) === 'off' ? 'on' : 'off';
     applySound(active);
-    try {
-      chrome.storage.local.set({ soundPref });
-    } catch {}
+    saveSound();
   }
+
+  // 0 from the slider means muted; the last real level is kept for when sound comes back on.
+  function setVolume(x) {
+    x = Math.round(clamp(x, 0, 1) * 100) / 100;
+    if (x === 0) soundPref = 'off';
+    else {
+      soundPref = 'on';
+      volumePref = x;
+    }
+    if (active) applySound(active);
+    saveSound();
+  }
+
+  volSlider.addEventListener('input', () => setVolume(Number(volSlider.value)));
+  // Hand the keyboard back to our shortcuts once the slider is let go.
+  volSlider.addEventListener('change', () => volSlider.blur());
+  volWrap.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      const current = soundPref === 'off' ? 0 : volumePref;
+      // A mouse-wheel notch moves 5%; trackpads move smoothly.
+      setVolume(current + clamp(-e.deltaY * 0.001, -0.05, 0.05));
+    },
+    { passive: false }
+  );
 
   for (const type of ['pointerdown', 'keydown']) {
     window.addEventListener(
       type,
       () => {
         lastGesture = performance.now();
-        gestureSound = active ? soundOf(active) : null;
+        gestureSound = active ? soundKey(active) : null;
         gesturePaused = active ? active.paused : null;
         if (unmuteBlocked) {
           unmuteBlocked = false;
@@ -304,9 +354,10 @@
   muteBtn.addEventListener('click', toggleMute);
   setSpeed(1, false);
   try {
-    chrome.storage.local.get(['speed', 'soundPref'], (r) => {
+    chrome.storage.local.get(['speed', 'soundPref', 'volumePref'], (r) => {
       if (SPEEDS.includes(r.speed)) setSpeed(r.speed, false);
       if (r.soundPref === 'on' || r.soundPref === 'off') soundPref = r.soundPref;
+      if (r.volumePref > 0 && r.volumePref <= 1) volumePref = r.volumePref;
     });
   } catch {}
 
@@ -466,7 +517,10 @@
     knobEl.style.left = `${ratio * 100}%`;
     timeEl.textContent = `${fmt(t)} / ${fmt(d)}`;
     playBtn.classList.toggle('flip', active.paused);
-    muteBtn.classList.toggle('flip', active.muted);
+    const off = soundOf(active) === 'off';
+    muteBtn.classList.toggle('flip', off);
+    if (root.activeElement !== volSlider) volSlider.value = off ? 0 : active.volume;
+    volSlider.title = `Volume ${off ? 0 : Math.round(active.volume * 100)}%`;
 
     let bufEnd = 0;
     const b = active.buffered;
@@ -483,7 +537,7 @@
 
   function place() {
     const r = active.getBoundingClientRect();
-    const w = Math.min(Math.max(r.width, 400), innerWidth);
+    const w = Math.min(Math.max(r.width, 460), innerWidth);
     const left = clamp(r.left + (r.width - w) / 2, 0, innerWidth - w);
     const bottom = Math.min(r.bottom, innerHeight);
     host.style.left = `${left}px`;
