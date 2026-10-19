@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Video Scrubber",
+  "version": "1.0.0",
+  "description": "Seek bar, speed control, and a frame strip for any video on sites that hide them (Instagram, TikTok, Shorts, Facebook, X).",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
