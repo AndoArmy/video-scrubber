@@ -38,6 +38,8 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 - **Speed** carries over to every next video and survives reloads.
 - **Volume** level is remembered and applied to every next video, even when the site resets it. Dragging to 0 mutes; turning sound back on returns to your last level.
 - **Sound** is on by default: when Instagram or TikTok starts a reel muted, the extension unmutes it. Mute with the bar's button, `M`, or the site's own mute button, and every next video stays muted until you turn sound back on. Chrome only lets a page play sound after you've clicked or pressed a key on it, so on a freshly opened tab the first video plays muted until your first click (except on sites Chrome already trusts with sound because you watch there a lot).
+- **Grids:** on Explore, Discover, search results, or anywhere several videos show at once, the bar stays hidden until you click a video. Open posts and the reel player always get a bar.
+- The bar is never wider than the video it sits on; on narrow videos the controls wrap onto a second row.
 - On Instagram, `←` / `→` override Instagram's own "previous / next post" arrows while a video is active.
 - The bar covers Instagram's small mute icon in the bottom corner. The bar's own mute button replaces it.
 - Nothing leaves your computer. Only speed and sound choices are saved, in Chrome's local extension storage.

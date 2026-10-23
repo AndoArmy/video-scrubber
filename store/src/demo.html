@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>demo</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; font: 14px -apple-system, system-ui, sans-serif; color: #fff; }
+  body { display: flex; align-items: center; justify-content: center; gap: 56px;
+         background: radial-gradient(1200px 700px at 30% 40%, #1b1b22, #08080a); }
+  .phone { width: 400px; height: 711px; border-radius: 18px; overflow: hidden; position: relative; background: #000;
+           box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .copy { width: 440px; }
+  .copy h1 { font-size: 44px; line-height: 1.05; margin: 0 0 18px; letter-spacing: -0.02em; }
+  .copy h1 em { font-style: normal; color: #ffd400; }
+  .copy p { font-size: 18px; line-height: 1.45; color: #b9b9c2; margin: 0 0 22px; }
+  .copy ul { list-style: none; padding: 0; margin: 0; }
+  .copy li { font-size: 17px; margin: 10px 0; color: #e8e8ee; }
+  .copy li b { display: inline-block; min-width: 34px; padding: 2px 8px; margin-right: 10px; border-radius: 6px;
+               background: #26262d; color: #ffd400; font: 600 14px ui-monospace, Menlo, monospace; text-align: center; }
+</style>
+<div class="phone"><video id="v" src="demo.mp4" muted loop playsinline></video></div>
+<div class="copy">
+  <h1>Skim any video in <em>seconds</em></h1>
+  <p>Seek bar, speed, volume and a frame strip on Instagram, TikTok and Facebook.</p>
+  <ul>
+    <li><b>←→</b>Skip 5 seconds</li>
+    <li><b>S</b>Cycle speed up to 4x</li>
+    <li><b>1-9</b>Jump to 10%-90%</li>
+  </ul>
+</div>

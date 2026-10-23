@@ -9,6 +9,9 @@
   const SEEK_STEP = 5; // seconds per arrow key
   const MIN_VIDEO_SIZE = 120; // px; skips avatars, ad pixels, tiny previews
   const PICK_INTERVAL = 150; // ms between "which video is active" checks
+  const GRID_MIN_VIDEOS = 3; // this many videos on screen at once = a grid (Explore, Discover, search); bar waits for a click
+  const FOCUS_AREA = 0.2; // a video covering this share of the window (post popup, reel player) never counts as a grid tile
+  const COMPACT_WIDTH = 460; // px; narrower videos get a tighter bar that wraps instead of spilling past the video
 
   let speed = 1;
   let soundPref = 'on'; // sound on by default; 'off' once the user mutes (our button, M, or the site's own button)
@@ -22,6 +25,7 @@
   let hidden = false;
   let active = null;
   let pointer = { x: -1, y: -1 };
+  let clicked = null; // the video the user last clicked; the only grid tile that gets a bar
   let dragging = false;
   let previewing = false;
   let lastPick = 0;
@@ -66,7 +70,12 @@
         position: absolute; top: 3px; width: 12px; height: 12px; margin-left: -6px;
         border-radius: 50%; background: #ffd400; left: 0;
       }
-      .row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+      .row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
+      .compact { padding: 6px 8px; }
+      .compact .row { gap: 4px 5px; }
+      .compact .time { min-width: 0; }
+      .compact button { padding: 4px 5px; }
+      .compact .speeds { gap: 1px; }
       .time { font-variant-numeric: tabular-nums; min-width: 82px; }
       .icon { display: flex; align-items: center; padding: 4px 6px; }
       .icon svg { width: 14px; height: 14px; fill: #fff; }
@@ -171,16 +180,25 @@
   // ---------- picking the active video ----------
 
   function pickVideo() {
-    let under = null;
-    let underArea = 0;
-    let best = null;
-    let bestArea = 0;
+    const seen = [];
     for (const v of document.getElementsByTagName('video')) {
       const r = v.getBoundingClientRect();
       if (r.width < MIN_VIDEO_SIZE || r.height < MIN_VIDEO_SIZE) continue;
       if (v.checkVisibility && !v.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
       const a = visibleArea(r);
       if (!a) continue;
+      seen.push({ v, r, a });
+    }
+    if (clicked && !clicked.isConnected) clicked = null;
+    // A grid of videos (Explore, Discover, search results): no bar until the user clicks one.
+    // Big videos (an opened post, the reel player) are never grid tiles, so they always get a bar.
+    const grid = seen.length >= GRID_MIN_VIDEOS;
+    const eligible = grid ? seen.filter((c) => c.v === clicked || c.a >= FOCUS_AREA * innerWidth * innerHeight) : seen;
+    let under = null;
+    let underArea = 0;
+    let best = null;
+    let bestArea = 0;
+    for (const { v, r, a } of eligible) {
       if (inside(r, pointer.x, pointer.y) && a > underArea) {
         under = v;
         underArea = a;
@@ -192,7 +210,7 @@
     }
     if (under) return under;
     // Pointer is elsewhere: stick with the current video while it's still mostly on screen.
-    if (active && active.isConnected) {
+    if (active && active.isConnected && eligible.some((c) => c.v === active)) {
       const r = active.getBoundingClientRect();
       if (visibleArea(r) >= 0.3 * r.width * r.height) return active;
     }
@@ -337,7 +355,20 @@
   for (const type of ['pointerdown', 'keydown']) {
     window.addEventListener(
       type,
-      () => {
+      (e) => {
+        if (type === 'pointerdown') {
+          let hit = null;
+          let hitArea = 0;
+          for (const v of document.getElementsByTagName('video')) {
+            const r = v.getBoundingClientRect();
+            const a = visibleArea(r);
+            if (a > hitArea && inside(r, e.clientX, e.clientY)) {
+              hit = v;
+              hitArea = a;
+            }
+          }
+          if (hit) clicked = hit;
+        }
         lastGesture = performance.now();
         gestureSound = active ? soundKey(active) : null;
         gesturePaused = active ? active.paused : null;
@@ -537,7 +568,8 @@
 
   function place() {
     const r = active.getBoundingClientRect();
-    const w = Math.min(Math.max(r.width, 460), innerWidth);
+    const w = Math.min(Math.max(r.width, 240), innerWidth);
+    panel.classList.toggle('compact', w < COMPACT_WIDTH);
     const left = clamp(r.left + (r.width - w) / 2, 0, innerWidth - w);
     const bottom = Math.min(r.bottom, innerHeight);
     host.style.left = `${left}px`;
