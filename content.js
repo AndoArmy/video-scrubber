@@ -1,4 +1,4 @@
-// Video Scrubber: seek bar, speed buttons, keyboard shortcuts, and a frame strip
+// Reels Scrubber: seek bar, speed buttons, keyboard shortcuts, and a frame strip
 // for whichever video is under the mouse (or most visible on screen).
 (() => {
   if (window.__videoScrubber) return;

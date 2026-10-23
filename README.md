@@ -1,4 +1,4 @@
-# Video Scrubber
+# Reels Scrubber
 
 Chrome extension that adds a seek bar, speed buttons, keyboard shortcuts, and a frame strip to videos on Instagram, TikTok, and Facebook. It stays off on every other site. Built for skimming: see what a video is and what happens in it in a few seconds.
 

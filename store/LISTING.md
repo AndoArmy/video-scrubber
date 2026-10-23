@@ -1,9 +1,9 @@
-# Chrome Web Store listing — Video Scrubber
+# Chrome Web Store listing — Reels Scrubber
 
 Copy each block into the matching field in the developer dashboard.
 
 ## Name
-Video Scrubber
+Reels Scrubber
 
 ## Summary (132 characters max)
 Seek bar, speed control, volume and a frame preview strip for videos on Instagram, TikTok, and Facebook.
@@ -17,7 +17,7 @@ English
 ## Description
 Skim videos in seconds instead of watching them end to end.
 
-Video Scrubber adds a seek bar, speed buttons, keyboard shortcuts, and a frame strip to videos on Instagram, TikTok, and Facebook. It stays off on every other site.
+Reels Scrubber adds a seek bar, speed buttons, keyboard shortcuts, and a frame strip to videos on Instagram, TikTok, and Facebook. It stays off on every other site.
 
 WHAT YOU GET
 - Seek bar: click or drag to jump anywhere in the video.
@@ -27,7 +27,7 @@ WHAT YOU GET
 - Keyboard shortcuts: arrow keys to skip 5 seconds, number keys to jump to 10%-90%, S for speed, K to play/pause, M to mute, H to hide the bar.
 
 PRIVATE BY DESIGN
-Nothing leaves your computer. Video Scrubber makes no network requests, has no accounts, and collects no data. Only your speed and sound choices are saved, in Chrome's local extension storage.
+Nothing leaves your computer. Reels Scrubber makes no network requests, has no accounts, and collects no data. Only your speed and sound choices are saved, in Chrome's local extension storage.
 
 SHORTCUTS
 Left / Right: back / forward 5 seconds
