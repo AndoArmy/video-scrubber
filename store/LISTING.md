@@ -63,7 +63,7 @@ Tick no data-collection categories. Tick all three certifications:
 - I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
 ## Privacy policy URL
-Publish `store/PRIVACY.md` (rendered as a page) and paste its public URL. See PUBLISHING-CHECKLIST.md.
+https://andoarmy.github.io/video-scrubber/privacy.html
 
 ## Visibility
 Unlisted for the first release. Switch to Public after testing.
