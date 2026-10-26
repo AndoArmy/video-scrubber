@@ -40,7 +40,12 @@
 
   window.addEventListener('message', (e) => {
     if (e.source !== frame.contentWindow || !e.data) return;
-    if (e.data.rsReady) ready = true;
+    if (e.data.rsReady) {
+      ready = true;
+      // A slow embed that arrives after we gave up still gets shown.
+      msg.style.display = 'none';
+      frame.style.display = '';
+    }
     else if (e.data.rsFallback && parsed.platform === 'tiktok' && !usedFallback) useTikTokPlayer();
   });
 
@@ -51,8 +56,13 @@
     }, TIKTOK_TIMEOUT);
   } else {
     frame.src = parsed.embedUrl;
+    // Instagram's embed sometimes stalls on the first try; one reload before giving up.
     setTimeout(() => {
-      if (!ready) cantPreview();
+      if (ready) return;
+      frame.src = parsed.embedUrl;
+      setTimeout(() => {
+        if (!ready) cantPreview();
+      }, READY_TIMEOUT);
     }, READY_TIMEOUT);
   }
 })();
