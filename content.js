@@ -184,7 +184,8 @@
     for (const v of document.getElementsByTagName('video')) {
       const r = v.getBoundingClientRect();
       if (r.width < MIN_VIDEO_SIZE || r.height < MIN_VIDEO_SIZE) continue;
-      if (v.checkVisibility && !v.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue;
+      // No opacityProperty: TikTok plays its real <video> at opacity 0 behind a poster/fade layer.
+      if (v.checkVisibility && !v.checkVisibility({ visibilityProperty: true })) continue;
       const a = visibleArea(r);
       if (!a) continue;
       seen.push({ v, r, a });
