@@ -1,0 +1,72 @@
+// Extension page that plays one TikTok video (?u=<video page url>) in a plain <video>, so the
+// scrubber (content.js, loaded below) can attach to it. TikTok's own embed draws to a canvas, so we
+// read the video file's address off TikTok's page ourselves, straight from TikTok to this browser, the way its web page does.
+// If anything about that fails, popup.js is told and falls back to TikTok's own player.
+(async () => {
+  const REFERER_RULE_ID = 1;
+  const page = new URLSearchParams(location.search).get('u') || '';
+
+  function fallback(reason) {
+    window.parent.postMessage({ rsFallback: reason }, '*');
+  }
+
+  // The puzzle answer only needs to live for the one retry; TikTok's own script expires it after a second.
+  function setCookie({ name, value }) {
+    return chrome.cookies.set({
+      url: 'https://www.tiktok.com/',
+      domain: '.tiktok.com',
+      path: '/',
+      name,
+      value,
+      secure: true,
+      expirationDate: Date.now() / 1000 + 120,
+    });
+  }
+
+  try {
+    // TikTok's file servers refuse requests without a tiktok.com referrer; fetch can't set that itself.
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [REFERER_RULE_ID],
+      addRules: [
+        {
+          id: REFERER_RULE_ID,
+          priority: 1,
+          action: { type: 'modifyHeaders', requestHeaders: [{ header: 'Referer', operation: 'set', value: 'https://www.tiktok.com/' }] },
+          condition: {
+            initiatorDomains: [chrome.runtime.id],
+            requestDomains: ['tiktok.com', 'tiktokcdn.com', 'tiktokcdn-us.com', 'tiktokv.com'],
+            resourceTypes: ['xmlhttprequest', 'media'],
+          },
+        },
+      ],
+    });
+
+    // Loading the page sets the cookies the file servers check.
+    const getPage = async () => (await fetch(page, { credentials: 'include' })).text();
+    let html = await getPage();
+    let parsed = parseTikTokVideo(html);
+    if (parsed.error === 'layout') {
+      // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
+      const solved = solveWafChallenge(html);
+      if (solved) {
+        await Promise.all(solved.cookies.map((c) => setCookie(c)));
+        html = await getPage();
+        await Promise.all(solved.cookies.map((c) => chrome.cookies.remove({ url: 'https://www.tiktok.com/', name: c.name })));
+        parsed = parseTikTokVideo(html);
+      }
+    }
+    if (parsed.error) return fallback(parsed.error);
+
+    // The video element streams the file itself (starts at once, seeks with range requests).
+    const video = document.getElementById('v');
+    video.addEventListener('error', () => fallback('file'), { once: true });
+    video.src = parsed.url;
+
+    // The scrubber attaches to the first big <video> it finds, so it loads once the video has a source.
+    const script = document.createElement('script');
+    script.src = 'content.js';
+    document.body.appendChild(script);
+  } catch (err) {
+    fallback(String(err && err.message || err));
+  }
+})();

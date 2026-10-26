@@ -37,9 +37,9 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 
 Click a cell that holds a TikTok or Instagram link and the video plays in a popup under that cell. Click another cell to switch videos; click a non-link cell or press `Esc` to close it. Nothing opens when you move between cells with the keyboard.
 
-- **Instagram** plays with the full scrubber (seek bar, speed, frame strip). **TikTok** plays in TikTok's own player with its own controls (TikTok draws its video on a canvas, so the scrubber can't attach to it).
+- **Instagram and TikTok** both play with the full scrubber (seek bar, speed, frame strip). For TikTok the extension reads the video's file address from TikTok's page (answering TikTok's bot-check puzzle itself) and plays the file directly; it goes from TikTok to your browser and nowhere else. If TikTok changes its page and that stops working, the popup falls back to TikTok's own player with its own controls and no scrubber. TikTok photo posts always use TikTok's own player.
 - Videos start muted and on their own; sound follows your saved volume once Chrome allows it.
-- Keys only reach the popup after you click on the video, so typing in other cells is never intercepted. Then `A` / `D` seek back / forward 5 seconds (arrow keys stay with Sheets), plus `S` `K` `M` `H` `0`-`9` as usual (Instagram only). Click any cell to hand the keyboard back to Sheets.
+- Keys only reach the popup after you click on the video, so typing in other cells is never intercepted. Then `A` / `D` seek back / forward 5 seconds (arrow keys stay with Sheets), plus `S` `K` `M` `H` `0`-`9` as usual. Click any cell to hand the keyboard back to Sheets.
 - If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), the popup says so and **Open link** under it opens the post. Moving to another cell with the keyboard closes the popup; click a link cell again to reopen it. Links made with `=HYPERLINK()` show as a formula in the formula bar and are not previewed.
 
 ## Behavior notes
@@ -51,6 +51,7 @@ Click a cell that holds a TikTok or Instagram link and the video plays in a popu
 - The bar is never wider than the video it sits on; on narrow videos the controls wrap onto a second row.
 - On Instagram, `←` / `→` override Instagram's own "previous / next post" arrows while a video is active.
 - The bar covers Instagram's small mute icon in the bottom corner. The bar's own mute button replaces it.
+- Chrome shows an extra "read data on tiktok.com" permission on update; it is what lets the Sheets popup load TikTok videos.
 - Nothing leaves your computer. Only speed and sound choices are saved, in Chrome's local extension storage.
 
 ## Files
