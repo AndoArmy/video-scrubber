@@ -45,7 +45,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "popup.html"
+        "popup.html",
+        "tiktok-player.html"
       ],
       "matches": [
         "https://docs.google.com/*"
