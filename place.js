@@ -23,6 +23,13 @@
     return { left, top, w, h };
   }
 
-  if (typeof module !== 'undefined' && module.exports) module.exports = { placePopup };
-  else globalThis.placePopup = placePopup;
+  // What an open popup does on each check: stay under its cell, switch to the newly selected link
+  // (arrow keys moved the selection), or close (no link there, or the cell is gone / scrolled away).
+  function followAction({ hasCell, offGrid, link, openLink }) {
+    if (!hasCell || offGrid || !link) return 'close';
+    return link === openLink ? 'place' : 'open';
+  }
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = { placePopup, followAction };
+  else Object.assign(globalThis, { placePopup, followAction });
 })();

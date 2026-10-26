@@ -35,3 +35,22 @@ test('never returns a negative position even in a tiny window', () => {
   const r = placePopup(cell(5, 100), size, { w: 200, h: 300 });
   assert.ok(r.left >= 0 && r.top >= 0, JSON.stringify(r));
 });
+
+const { followAction } = require('../place.js');
+
+test('an open popup follows its cell while the selection stays on the same link', () => {
+  assert.equal(followAction({ hasCell: true, link: 'a', openLink: 'a' }), 'place');
+});
+
+test('moving the selection (arrow key) to another link switches the popup to it', () => {
+  assert.equal(followAction({ hasCell: true, link: 'b', openLink: 'a' }), 'open');
+});
+
+test('moving to a cell without a link closes the popup', () => {
+  assert.equal(followAction({ hasCell: true, link: null, openLink: 'a' }), 'close');
+});
+
+test('a cell scrolled off the grid or missing closes the popup', () => {
+  assert.equal(followAction({ hasCell: false, link: 'a', openLink: 'a' }), 'close');
+  assert.equal(followAction({ hasCell: true, offGrid: true, link: 'a', openLink: 'a' }), 'close');
+});

@@ -130,7 +130,8 @@
     }, SETTLE_MS);
   }
 
-  // Only a click in the grid opens or closes the popup. Keyboard moves between cells do nothing.
+  // Only a click in the grid opens the popup. Once it is open, follow() below carries it along as the
+  // arrow keys move the selection from link to link.
   window.addEventListener(
     'mouseup',
     (e) => {
@@ -166,7 +167,10 @@
     const gridRect = grid && grid.getBoundingClientRect();
     const offGrid =
       gridRect && rect && (rect.bottom < gridRect.top || rect.top > gridRect.bottom || rect.right < gridRect.left || rect.left > gridRect.right);
-    if (!rect || offGrid || linkOfSelectedCell() !== openLink) closePopup();
+    const link = linkOfSelectedCell();
+    const action = followAction({ hasCell: !!rect, offGrid, link, openLink });
+    if (action === 'close') closePopup();
+    else if (action === 'open') openPopup(link, rect);
     else place(rect);
   }
   window.addEventListener('scroll', follow, true);

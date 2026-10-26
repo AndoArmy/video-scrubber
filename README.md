@@ -35,12 +35,12 @@ Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt
 
 ## Google Sheets preview
 
-Click a cell that holds a TikTok or Instagram link and the video plays in a popup under that cell. Click another cell to switch videos; click a non-link cell or press `Esc` to close it. Nothing opens when you move between cells with the keyboard.
+Click a cell that holds a TikTok or Instagram link and the video plays in a popup under that cell. Click another cell to switch videos; click a non-link cell or press `Esc` to close it. A popup never opens from keyboard moves alone; it has to be opened with a click first.
 
 - **Instagram and TikTok** both play with the full scrubber (seek bar, speed, frame strip). For TikTok the extension reads the video's file address from TikTok's page (answering TikTok's bot-check puzzle itself) and plays the file directly; it goes from TikTok to your browser and nowhere else. If TikTok changes its page and that stops working, the popup falls back to TikTok's own player with its own controls and no scrubber. TikTok photo posts always use TikTok's own player.
 - Videos start muted and on their own; sound follows your saved volume once Chrome allows it.
 - Keys only reach the popup after you click on the video, so typing in other cells is never intercepted. Then `A` / `D` seek back / forward 5 seconds (arrow keys stay with Sheets), plus `S` `K` `M` `H` `0`-`9` as usual. Click any cell to hand the keyboard back to Sheets.
-- If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), the popup says so and **Open link** under it opens the post. Moving to another cell with the keyboard closes the popup; click a link cell again to reopen it. Links made with `=HYPERLINK()` show as a formula in the formula bar and are not previewed.
+- If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), the popup says so and **Open link** under it opens the post. Once the popup is open, the up / down arrow keys move to the next link and the popup switches to that video on its own; landing on a cell without a link closes it (click a link cell to open it again). Links made with `=HYPERLINK()` show as a formula in the formula bar and are not previewed.
 
 ## Behavior notes
 
