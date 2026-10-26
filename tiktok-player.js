@@ -77,33 +77,35 @@
       ],
     });
 
-    // Loading the page sets the cookies the file servers check.
+    // Loading the page also gives the browser the cookies the video file servers check.
     status('asking TikTok');
     const getPage = async () => (await fetch(page, { credentials: 'include' })).text();
-    let html = await getPage();
-    if (!html.trim()) {
-      // A blank page: a leftover puzzle cookie. Clear it and ask again.
-      await Promise.all(PUZZLE_COOKIES.map((name) => chrome.cookies.remove({ url: 'https://www.tiktok.com/', name })));
-      html = await getPage();
-    }
-    let parsed = parseTikTokVideo(html);
-    let solved = null;
+    const isPuzzle = (h) => /id="cs"/.test(h);
     const notes = [];
+    let html = '';
+    let parsed = { error: 'layout' };
+
     if (parsed.error === 'layout') {
-      // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
-      solved = solveWafChallenge(html);
-      if (solved) {
-        status('bot check');
-        notes.push(`cookies ${(await Promise.all(solved.cookies.map((c) => setCookie(c)))).map((r) => (r ? 'set' : 'REJECTED')).join('/')}`);
+      html = await getPage();
+      if (!html.trim()) {
+        // A blank page: a puzzle cookie left behind by an older version. Clear it and ask again.
+        await Promise.all(PUZZLE_COOKIES.map((name) => chrome.cookies.remove({ url: 'https://www.tiktok.com/', name })));
         html = await getPage();
-        await Promise.all(solved.cookies.map(removeIfOurs));
+      }
+      parsed = parseTikTokVideo(html);
+      const solved = parsed.error === 'layout' ? solveWafChallenge(html) : null;
+      if (solved) {
+        // Answer the bot check the way a real tab would. Sent as a header: browsers differ in whether the
+        // cookie jar carries it (it failed on some Chromes), and the header costs no extra request.
+        status('bot check');
+        html = await getPageWithCookieHeader(solved.cookies);
         parsed = parseTikTokVideo(html);
-        if (parsed.error === 'layout' && /id="cs"/.test(html)) {
-          // The cookie jar did not carry the answer (a browser setting, or another cookie in the way): send it as a header.
-          notes.push('retry with header');
-          html = await getPageWithCookieHeader(solved.cookies);
+        notes.push(parsed.error === 'layout' ? 'header failed' : 'header worked');
+        if (parsed.error === 'layout' && isPuzzle(html)) {
+          notes.push(`cookies ${(await Promise.all(solved.cookies.map((c) => setCookie(c)))).map((r) => (r ? 'set' : 'REJECTED')).join('/')}`);
+          html = await getPage();
+          await Promise.all(solved.cookies.map(removeIfOurs));
           parsed = parseTikTokVideo(html);
-          notes.push(parsed.error === 'layout' ? 'header failed' : 'header worked');
         }
       }
     }
@@ -113,7 +115,7 @@
     const video = document.getElementById('v');
     video.addEventListener('error', () => fallback('file'), { once: true });
     status('got file address');
-    video.addEventListener('loadeddata', () => status('first frame'), { once: true });
+    video.addEventListener('loadeddata', () => status(`first frame${notes.length ? ` (${notes.join(', ')})` : ''}`), { once: true });
     video.src = parsed.url;
 
     // The scrubber attaches to the first big <video> it finds, so it loads once the video has a source.
