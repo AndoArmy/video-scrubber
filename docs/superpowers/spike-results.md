@@ -16,3 +16,6 @@ Only 4 of the 37 supplied links were tried (3 TikTok, 1 Instagram). Not a full s
 - Instagram: go.
 - TikTok (25 of his 37 links): embed/v2 is blocked or rate-limited here, and the working player/v1 draws to a canvas, so the scrubber cannot drive it. Gate NOT passed for TikTok.
 - Per the spec: stop and ask Andres before attempting any fallback.
+
+## Decision (Andres, 2026-10-26): option 1
+Instagram = embed page + full scrubber. TikTok = TikTok player/v1 with its built-in controls (no scrubber, no A/D, no frame strip). toEmbedUrl maps TikTok to https://www.tiktok.com/player/v1/<id>.

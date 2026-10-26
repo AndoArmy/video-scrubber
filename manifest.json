@@ -20,7 +20,6 @@
     },
     {
       "matches": [
-        "*://www.tiktok.com/embed/*",
         "*://www.instagram.com/*/embed*"
       ],
       "js": [
