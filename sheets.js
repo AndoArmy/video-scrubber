@@ -11,7 +11,7 @@
   if (window.__sheetsPreview) return;
   window.__sheetsPreview = true;
 
-  const POPUP_SIZE = { w: 340, h: 620 };
+  const POPUP_SIZE = { w: 360, h: 700 }; // Instagram embed header + 9:16 video + popup footer
   const SETTLE_MS = 80; // Sheets updates the formula bar a beat after the click
 
   let host = null;
@@ -52,16 +52,13 @@
     host = document.createElement('div');
     host.style.cssText = 'all: initial; position: fixed; z-index: 2147483646; display: none;';
     const root = host.attachShadow({ mode: 'open' });
-    root.innerHTML = `
-      <style>
-        :host { all: initial; }
-        iframe {
-          display: block; border: 0; background: #111; border-radius: 10px;
-          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
-        }
-      </style>
-      <iframe allow="autoplay; fullscreen; encrypted-media"></iframe>`;
-    frame = root.querySelector('iframe');
+    // Built with DOM calls, not innerHTML: Google Docs pages enforce Trusted Types.
+    const style = document.createElement('style');
+    style.textContent =
+      ':host { all: initial; } iframe { display: block; border: 0; background: #111; border-radius: 10px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45); }';
+    frame = document.createElement('iframe');
+    frame.allow = 'autoplay; fullscreen; encrypted-media';
+    root.append(style, frame);
     frame.width = POPUP_SIZE.w;
     frame.height = POPUP_SIZE.h;
     document.documentElement.appendChild(host);

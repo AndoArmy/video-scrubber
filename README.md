@@ -33,6 +33,15 @@ The bar sits at the bottom of the video under your mouse (or the one mostly on s
 
 Shortcuts are off while you type in a text box, and never fire with Cmd/Ctrl/Alt held.
 
+## Google Sheets preview
+
+Click a cell that holds a TikTok or Instagram link and the video plays in a popup under that cell. Click another cell to switch videos; click a non-link cell or press  to close it. Nothing opens when you move between cells with the keyboard.
+
+- **Instagram** plays with the full scrubber (seek bar, speed, frame strip). **TikTok** plays in TikTok's own player with its own controls (TikTok draws its video on a canvas, so the scrubber can't attach to it).
+- Videos start muted and on their own; sound follows your saved volume once Chrome allows it.
+- Keys only reach the popup after you click on the video, so typing in other cells is never intercepted. Then  /  seek back / forward 5 seconds (arrow keys stay with Sheets), plus     - as usual. Click any cell to hand the keyboard back to Sheets.
+- If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), use **Open link** under the popup.
+
 ## Behavior notes
 
 - **Speed** carries over to every next video and survives reloads.

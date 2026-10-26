@@ -19,7 +19,7 @@
       if (!m) return null;
       return {
         platform: 'tiktok',
-        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}`,
+        embedUrl: `https://www.tiktok.com/player/v1/${m[1]}?autoplay=1`,
         sourceUrl: `https://www.tiktok.com${url.pathname.replace(/\/$/, '')}`,
       };
     }

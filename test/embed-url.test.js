@@ -7,7 +7,7 @@ test('tiktok video becomes embed v2 url and strips the query', () => {
     toEmbedUrl('https://www.tiktok.com/@andrea.sells/video/7300000000000000001?is_from_webapp=1'),
     {
       platform: 'tiktok',
-      embedUrl: 'https://www.tiktok.com/player/v1/7300000000000000001',
+      embedUrl: 'https://www.tiktok.com/player/v1/7300000000000000001?autoplay=1',
       sourceUrl: 'https://www.tiktok.com/@andrea.sells/video/7300000000000000001',
     }
   );
@@ -16,7 +16,7 @@ test('tiktok video becomes embed v2 url and strips the query', () => {
 test('tiktok photo post resolves to its embed', () => {
   assert.equal(
     toEmbedUrl('https://www.tiktok.com/@andrea.sells/photo/7300000000000000002').embedUrl,
-    'https://www.tiktok.com/player/v1/7300000000000000002'
+    'https://www.tiktok.com/player/v1/7300000000000000002?autoplay=1'
   );
 });
 
@@ -60,6 +60,6 @@ test('text that is not a supported link returns null', () => {
 test('surrounding whitespace and uppercase host are tolerated', () => {
   assert.equal(
     toEmbedUrl('  HTTPS://WWW.TikTok.com/@u/video/123  ').embedUrl,
-    'https://www.tiktok.com/player/v1/123'
+    'https://www.tiktok.com/player/v1/123?autoplay=1'
   );
 });

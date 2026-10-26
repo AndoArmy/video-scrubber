@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Reels Scrubber",
-  "version": "1.4.1",
-  "description": "Seek bar, speed control, and a frame strip for videos on Instagram, TikTok, and Facebook.",
+  "version": "1.5.0",
+  "description": "Seek bar, speed control, and a frame strip for videos on Instagram, TikTok, and Facebook, plus video previews inside Google Sheets.",
   "permissions": [
     "storage"
   ],

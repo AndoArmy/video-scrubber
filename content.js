@@ -225,6 +225,21 @@
     if (active && active.playbackRate !== speed) active.playbackRate = speed;
     if (active) applySound(active);
     showStrip();
+    if (active && IN_SHEETS_EMBED) startInSheetsPopup(active);
+  }
+
+  // Inside the Sheets popup: tell popup.js a video exists, and start it muted (muted autoplay is
+  // always allowed; the sound logic above unmutes once Chrome lets it) so no click is needed per video.
+  let embedReadySent = false;
+  function startInSheetsPopup(v) {
+    if (!embedReadySent) {
+      embedReadySent = true;
+      window.parent.postMessage({ rsReady: true }, '*');
+    }
+    if (v.paused) {
+      v.muted = true;
+      v.play().catch(() => {});
+    }
   }
 
   // ---------- speed ----------
