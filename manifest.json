@@ -27,6 +27,17 @@
       ],
       "all_frames": true,
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://docs.google.com/spreadsheets/*"
+      ],
+      "js": [
+        "embed-url.js",
+        "place.js",
+        "sheets.js"
+      ],
+      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [

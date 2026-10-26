@@ -516,6 +516,10 @@
       if (!active || e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e.composedPath()[0])) return;
       const k = e.key;
+      if (IN_SHEETS_EMBED && k === 'Escape') {
+        window.top.postMessage({ rsClose: true }, '*'); // sheets.js closes the popup
+        return;
+      }
       // In the Sheets popup, A / D seek and the arrows stay with Sheets.
       const back = IN_SHEETS_EMBED ? k === 'a' || k === 'A' : k === 'ArrowLeft';
       const forward = IN_SHEETS_EMBED ? k === 'd' || k === 'D' : k === 'ArrowRight';
