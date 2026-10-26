@@ -39,6 +39,26 @@
   }
   const PUZZLE_COOKIES = ['_wafchallengeid', 'waforiginalreid'];
 
+  // One page request with the puzzle answer attached as a Cookie header, by a rule that matches only this video's page.
+  async function getPageWithCookieHeader(cookies) {
+    const id = 1000 + Math.floor(Math.random() * 1e6);
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      addRules: [
+        {
+          id,
+          priority: 2,
+          action: { type: 'modifyHeaders', requestHeaders: [{ header: 'Cookie', operation: 'set', value: cookies.map((c) => `${c.name}=${c.value}`).join('; ') }] },
+          condition: { initiatorDomains: [chrome.runtime.id], urlFilter: new URL(page).pathname, requestDomains: ['tiktok.com'], resourceTypes: ['xmlhttprequest'] },
+        },
+      ],
+    });
+    try {
+      return await (await fetch(page, { credentials: 'include' })).text();
+    } finally {
+      await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [id] });
+    }
+  }
+
   try {
     // TikTok's file servers refuse requests without a tiktok.com referrer; fetch can't set that itself.
     await chrome.declarativeNetRequest.updateDynamicRules({
@@ -68,18 +88,26 @@
     }
     let parsed = parseTikTokVideo(html);
     let solved = null;
+    const notes = [];
     if (parsed.error === 'layout') {
       // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
       solved = solveWafChallenge(html);
       if (solved) {
         status('bot check');
-        await Promise.all(solved.cookies.map((c) => setCookie(c)));
+        notes.push(`cookies ${(await Promise.all(solved.cookies.map((c) => setCookie(c)))).map((r) => (r ? 'set' : 'REJECTED')).join('/')}`);
         html = await getPage();
         await Promise.all(solved.cookies.map(removeIfOurs));
         parsed = parseTikTokVideo(html);
+        if (parsed.error === 'layout' && /id="cs"/.test(html)) {
+          // The cookie jar did not carry the answer (a browser setting, or another cookie in the way): send it as a header.
+          notes.push('retry with header');
+          html = await getPageWithCookieHeader(solved.cookies);
+          parsed = parseTikTokVideo(html);
+          notes.push(parsed.error === 'layout' ? 'header failed' : 'header worked');
+        }
       }
     }
-    if (parsed.error) return fallback(`${parsed.error}: ${describeTikTokPage(html)}${solved ? ', puzzle answered' : ''}`);
+    if (parsed.error) return fallback(`${parsed.error}: ${describeTikTokPage(html)}; ${notes.join(', ') || 'no puzzle'}`);
 
     // The video element streams the file itself (starts at once, seeks with range requests).
     const video = document.getElementById('v');
