@@ -24,6 +24,14 @@
     });
   }
 
+  // Taken back once used: TikTok can answer a blank page while a used puzzle cookie is still around. Only
+  // removed if it is still the one we set, because another Sheets tab may have replaced it for its own retry.
+  async function removeIfOurs({ name, value }) {
+    const now = await chrome.cookies.get({ url: 'https://www.tiktok.com/', name });
+    if (now && now.value === value) await chrome.cookies.remove({ url: 'https://www.tiktok.com/', name });
+  }
+  const PUZZLE_COOKIES = ['_wafchallengeid', 'waforiginalreid'];
+
   try {
     // TikTok's file servers refuse requests without a tiktok.com referrer; fetch can't set that itself.
     await chrome.declarativeNetRequest.updateDynamicRules({
@@ -45,6 +53,11 @@
     // Loading the page sets the cookies the file servers check.
     const getPage = async () => (await fetch(page, { credentials: 'include' })).text();
     let html = await getPage();
+    if (!html.trim()) {
+      // A blank page: a leftover puzzle cookie. Clear it and ask again.
+      await Promise.all(PUZZLE_COOKIES.map((name) => chrome.cookies.remove({ url: 'https://www.tiktok.com/', name })));
+      html = await getPage();
+    }
     let parsed = parseTikTokVideo(html);
     if (parsed.error === 'layout') {
       // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
@@ -52,6 +65,7 @@
       if (solved) {
         await Promise.all(solved.cookies.map((c) => setCookie(c)));
         html = await getPage();
+        await Promise.all(solved.cookies.map(removeIfOurs));
         parsed = parseTikTokVideo(html);
       }
     }
