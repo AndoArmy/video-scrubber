@@ -17,6 +17,27 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://www.tiktok.com/embed/*",
+        "*://www.instagram.com/*/embed*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html"
+      ],
+      "matches": [
+        "https://docs.google.com/*"
+      ]
     }
   ],
   "icons": {
