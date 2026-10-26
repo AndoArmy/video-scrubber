@@ -7,6 +7,7 @@
   const SPEEDS = [1, 1.5, 2, 3, 4];
   const FRAME_COUNT = 8;
   const SEEK_STEP = 5; // seconds per arrow key
+  const IN_SHEETS_EMBED = window !== window.top && /\/embed/.test(location.pathname); // framed inside the Sheets popup
   const MIN_VIDEO_SIZE = 120; // px; skips avatars, ad pixels, tiny previews
   const PICK_INTERVAL = 150; // ms between "which video is active" checks
   const GRID_MIN_VIDEOS = 3; // this many videos on screen at once = a grid (Explore, Discover, search); bar waits for a click
@@ -515,8 +516,11 @@
       if (!active || e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e.composedPath()[0])) return;
       const k = e.key;
-      if (k === 'ArrowLeft') seekTo(active.currentTime - SEEK_STEP);
-      else if (k === 'ArrowRight') seekTo(active.currentTime + SEEK_STEP);
+      // In the Sheets popup, A / D seek and the arrows stay with Sheets.
+      const back = IN_SHEETS_EMBED ? k === 'a' || k === 'A' : k === 'ArrowLeft';
+      const forward = IN_SHEETS_EMBED ? k === 'd' || k === 'D' : k === 'ArrowRight';
+      if (back) seekTo(active.currentTime - SEEK_STEP);
+      else if (forward) seekTo(active.currentTime + SEEK_STEP);
       else if (k === 's' || k === 'S') cycleSpeed();
       else if (k === 'k' || k === 'K') togglePlay();
       else if (k === 'm' || k === 'M') toggleMute();
