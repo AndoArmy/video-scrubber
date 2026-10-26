@@ -29,9 +29,14 @@
     if (!item) return { error: 'layout' };
     if (item.imagePost) return { error: 'photo' };
     const video = item.video || {};
-    // Chrome plays H.264 everywhere; HEVC entries are skipped.
-    const h264 = (video.bitrateInfo || []).find((b) => /264|avc/i.test(b.CodecType || '') && b.PlayAddr && b.PlayAddr.UrlList);
-    const url = video.playAddr || (h264 && h264.PlayAddr.UrlList[0]) || video.downloadAddr;
+    // Chrome plays H.264 everywhere; HEVC only with hardware support. Keep playAddr when it is H.264,
+    // otherwise take the best H.264 entry.
+    const isH264 = (c) => /264|avc/i.test(c || '');
+    const h264 = (video.bitrateInfo || [])
+      .filter((b) => isH264(b.CodecType) && b.PlayAddr && b.PlayAddr.UrlList && b.PlayAddr.UrlList[0])
+      .sort((a, b) => (b.Bitrate || 0) - (a.Bitrate || 0))[0];
+    const playIsH264 = !video.codecType || isH264(video.codecType);
+    const url = (playIsH264 && video.playAddr) || (h264 && h264.PlayAddr.UrlList[0]) || video.playAddr || video.downloadAddr;
     return url && ownHost(url) ? { url } : { error: 'layout' };
   }
 

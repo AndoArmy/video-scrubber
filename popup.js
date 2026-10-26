@@ -10,7 +10,7 @@
   const open = document.getElementById('open');
 
   function cantPreview() {
-    frame.remove();
+    frame.style.display = 'none';
     msg.style.display = 'flex';
     msg.textContent = "Can't preview this one. Use Open link below.";
   }

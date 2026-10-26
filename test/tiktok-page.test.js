@@ -44,3 +44,24 @@ test('refuses non-TikTok-hosted file addresses', () => {
   const html = page(detail({ video: { playAddr: 'https://evil.example/a.mp4' } }));
   assert.deepEqual(parseTikTokVideo(html), { error: 'layout' });
 });
+
+test('an HEVC playAddr loses to an h264 entry (Chrome without HEVC decoding would fail on it)', () => {
+  const html = page(
+    detail({
+      video: {
+        codecType: 'h265',
+        playAddr: 'https://v16.tiktok.com/video/hevc.mp4',
+        bitrateInfo: [
+          { CodecType: 'h264', Bitrate: 900, PlayAddr: { UrlList: ['https://v16.tiktok.com/video/low.mp4'] } },
+          { CodecType: 'h264', Bitrate: 2200, PlayAddr: { UrlList: ['https://v16.tiktok.com/video/high.mp4'] } },
+        ],
+      },
+    })
+  );
+  assert.deepEqual(parseTikTokVideo(html), { url: 'https://v16.tiktok.com/video/high.mp4' });
+});
+
+test('an h264 playAddr is used as is', () => {
+  const html = page(detail({ video: { codecType: 'h264', playAddr: 'https://v16.tiktok.com/video/a.mp4', bitrateInfo: [{ CodecType: 'h264', Bitrate: 9, PlayAddr: { UrlList: ['https://v16.tiktok.com/video/b.mp4'] } }] } }));
+  assert.deepEqual(parseTikTokVideo(html), { url: 'https://v16.tiktok.com/video/a.mp4' });
+});

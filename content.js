@@ -9,6 +9,8 @@
   const SEEK_STEP = 5; // seconds per arrow key
   // Only when our own popup page (an extension page) is the direct parent, never on other sites' Instagram embeds.
   const IN_SHEETS_EMBED = window !== window.top && location.ancestorOrigins?.[0] === `chrome-extension://${chrome.runtime.id}`;
+  // The embed content-script entry matches every Instagram embed on the web; only our own popup's one gets a bar.
+  if (window !== window.top && !IN_SHEETS_EMBED) return;
   const MIN_VIDEO_SIZE = 120; // px; skips avatars, ad pixels, tiny previews
   const PICK_INTERVAL = 150; // ms between "which video is active" checks
   const GRID_MIN_VIDEOS = 3; // this many videos on screen at once = a grid (Explore, Discover, search); bar waits for a click

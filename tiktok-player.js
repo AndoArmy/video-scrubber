@@ -10,7 +10,8 @@
     window.parent.postMessage({ rsFallback: reason }, '*');
   }
 
-  // The puzzle answer only needs to live for the one retry; TikTok's own script expires it after a second.
+  // The puzzle answer only needs to live for the one retry. It expires by itself, and is not removed by hand:
+  // another Sheets tab may have just set the same cookie for its own retry.
   function setCookie({ name, value }) {
     return chrome.cookies.set({
       url: 'https://www.tiktok.com/',
@@ -51,7 +52,6 @@
       if (solved) {
         await Promise.all(solved.cookies.map((c) => setCookie(c)));
         html = await getPage();
-        await Promise.all(solved.cookies.map((c) => chrome.cookies.remove({ url: 'https://www.tiktok.com/', name: c.name })));
         parsed = parseTikTokVideo(html);
       }
     }
