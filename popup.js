@@ -8,6 +8,9 @@
   const frame = document.getElementById('frame');
   const msg = document.getElementById('msg');
   const open = document.getElementById('open');
+  const statusEl = document.getElementById('status');
+  const t0 = performance.now();
+  const setStatus = (text) => (statusEl.textContent = text);
 
   function cantPreview() {
     frame.style.display = 'none';
@@ -35,13 +38,16 @@
   let usedFallback = false;
   function useTikTokPlayer() {
     usedFallback = true;
+    setStatus(statusEl.textContent + ' → TikTok player');
     frame.src = parsed.embedUrl;
   }
 
   window.addEventListener('message', (e) => {
     if (e.source !== frame.contentWindow || !e.data) return;
+    if (e.data.rsStatus) setStatus(e.data.rsStatus);
     if (e.data.rsReady) {
       ready = true;
+      setStatus(`${parsed.platform} ready ${((performance.now() - t0) / 1000).toFixed(1)}s`);
       // A slow embed that arrives after we gave up still gets shown.
       msg.style.display = 'none';
       frame.style.display = '';
@@ -52,7 +58,9 @@
   if (parsed.platform === 'tiktok') {
     frame.src = `tiktok-player.html?u=${encodeURIComponent(parsed.sourceUrl)}`;
     setTimeout(() => {
-      if (!ready && !usedFallback) useTikTokPlayer();
+      if (ready || usedFallback) return;
+      setStatus(`${statusEl.textContent || 'no answer'} (gave up after 15s)`);
+      useTikTokPlayer();
     }, TIKTOK_TIMEOUT);
   } else {
     frame.src = parsed.embedUrl;

@@ -6,8 +6,15 @@
   const REFERER_RULE_ID = 1;
   const page = new URLSearchParams(location.search).get('u') || '';
 
+  const t0 = performance.now();
+  const secs = () => ((performance.now() - t0) / 1000).toFixed(1) + 's';
+  // Shown in the popup footer so a slow load says where the time went.
+  function status(text) {
+    window.parent.postMessage({ rsStatus: `${text} ${secs()}` }, '*');
+  }
+
   function fallback(reason) {
-    window.parent.postMessage({ rsFallback: reason }, '*');
+    window.parent.postMessage({ rsFallback: reason, rsStatus: `own player failed (${reason}) ${secs()}` }, '*');
   }
 
   // The puzzle answer only needs to live for the one retry. It expires by itself, and is not removed by hand:
@@ -51,6 +58,7 @@
     });
 
     // Loading the page sets the cookies the file servers check.
+    status('asking TikTok');
     const getPage = async () => (await fetch(page, { credentials: 'include' })).text();
     let html = await getPage();
     if (!html.trim()) {
@@ -63,6 +71,7 @@
       // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
       const solved = solveWafChallenge(html);
       if (solved) {
+        status('bot check');
         await Promise.all(solved.cookies.map((c) => setCookie(c)));
         html = await getPage();
         await Promise.all(solved.cookies.map(removeIfOurs));
@@ -74,6 +83,8 @@
     // The video element streams the file itself (starts at once, seeks with range requests).
     const video = document.getElementById('v');
     video.addEventListener('error', () => fallback('file'), { once: true });
+    status('got file address');
+    video.addEventListener('loadeddata', () => status('first frame'), { once: true });
     video.src = parsed.url;
 
     // The scrubber attaches to the first big <video> it finds, so it loads once the video has a source.
