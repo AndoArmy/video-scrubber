@@ -37,6 +37,20 @@
     return null;
   }
 
-  if (typeof module !== 'undefined' && module.exports) module.exports = { toEmbedUrl };
-  else globalThis.toEmbedUrl = toEmbedUrl;
+  // A TikTok / Instagram link we can't embed (short links, profiles): the cleaned URL, so the popup
+  // can say "can't preview" with an Open link instead of staying silent. Anything else: null.
+  const SOCIAL_HOST = /^(?:[\w-]+\.)*(?:tiktok|instagram)\.com$/;
+  function isSocialLink(text) {
+    let url;
+    try {
+      url = new URL(String(text).trim());
+    } catch {
+      return null;
+    }
+    if ((url.protocol !== 'https:' && url.protocol !== 'http:') || !SOCIAL_HOST.test(url.hostname.toLowerCase())) return null;
+    return url.href;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = { toEmbedUrl, isSocialLink };
+  else Object.assign(globalThis, { toEmbedUrl, isSocialLink });
 })();

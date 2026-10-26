@@ -13,12 +13,14 @@
 
   const POPUP_SIZE = { w: 360, h: 700 }; // Instagram embed header + 9:16 video + popup footer
   const SETTLE_MS = 80; // Sheets updates the formula bar a beat after the click
+  const FOLLOW_MS = 150; // how often an open popup checks that its cell is still selected and on screen
 
   let host = null;
   let frame = null;
   let hideBubbleStyle = null;
   let openLink = null; // sourceUrl of the video in the popup
   let pending = 0;
+  let followTimer = 0;
 
   // ---------- reading the sheet ----------
 
@@ -75,26 +77,39 @@
     }
   }
 
-  function place(rect) {
-    const { left, top } = placePopup(rect, POPUP_SIZE);
-    host.style.left = `${left}px`;
-    host.style.top = `${top}px`;
+  // The link the popup should show for the selected cell: the embeddable link, or a TikTok /
+  // Instagram link we can't embed (the popup then says so and offers Open link), or null.
+  function linkOfSelectedCell() {
+    const text = readSelectedCellText();
+    const parsed = toEmbedUrl(text);
+    return parsed ? parsed.sourceUrl : isSocialLink(text);
   }
 
-  function openPopup(parsed, rect) {
+  function place(rect) {
+    const { left, top, w, h } = placePopup(rect, POPUP_SIZE);
+    host.style.left = `${left}px`;
+    host.style.top = `${top}px`;
+    frame.width = w;
+    frame.height = h;
+  }
+
+  function openPopup(link, rect) {
     ensureHost();
     hideGoogleBubble(true);
-    if (openLink !== parsed.sourceUrl) {
+    if (openLink !== link) {
       // One iframe, reused: setting src replaces whatever was loading, so a slow earlier video can't win.
-      frame.src = `${chrome.runtime.getURL('popup.html')}?u=${encodeURIComponent(parsed.sourceUrl)}`;
-      openLink = parsed.sourceUrl;
+      frame.src = `${chrome.runtime.getURL('popup.html')}?u=${encodeURIComponent(link)}`;
+      openLink = link;
     }
     place(rect);
     host.style.display = 'block';
+    if (!followTimer) followTimer = setInterval(follow, FOLLOW_MS);
   }
 
   function closePopup() {
     pending++;
+    clearInterval(followTimer);
+    followTimer = 0;
     if (!host) return;
     host.style.display = 'none';
     frame.src = 'about:blank';
@@ -108,9 +123,9 @@
     const mine = ++pending;
     setTimeout(() => {
       if (mine !== pending) return; // a newer click took over
-      const parsed = toEmbedUrl(readSelectedCellText());
+      const link = linkOfSelectedCell();
       const rect = selectedCellRect();
-      if (parsed && rect) openPopup(parsed, rect);
+      if (link && rect) openPopup(link, rect);
       else closePopup();
     }, SETTLE_MS);
   }
@@ -140,13 +155,18 @@
     if (e.data && e.data.rsClose && host && host.style.display !== 'none') closePopup();
   });
 
-  // Keep the popup on its cell while the sheet scrolls or the window resizes.
+  // Keep the popup on its cell while the sheet scrolls or the window resizes. If the selection has
+  // moved to a different cell (keyboard), the popup is for a video that is no longer selected, so
+  // it closes instead of sliding under the new row. Polled as well, because Sheets scrolls its
+  // canvas without always firing a DOM scroll event.
   function follow() {
     if (!host || host.style.display === 'none') return;
     const rect = selectedCellRect();
     const grid = document.getElementById('waffle-grid-container');
     const gridRect = grid && grid.getBoundingClientRect();
-    if (!rect || (gridRect && (rect.bottom < gridRect.top || rect.top > gridRect.bottom))) closePopup();
+    const offGrid =
+      gridRect && rect && (rect.bottom < gridRect.top || rect.top > gridRect.bottom || rect.right < gridRect.left || rect.left > gridRect.right);
+    if (!rect || offGrid || linkOfSelectedCell() !== openLink) closePopup();
     else place(rect);
   }
   window.addEventListener('scroll', follow, true);

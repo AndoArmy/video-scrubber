@@ -40,7 +40,7 @@ Click a cell that holds a TikTok or Instagram link and the video plays in a popu
 - **Instagram** plays with the full scrubber (seek bar, speed, frame strip). **TikTok** plays in TikTok's own player with its own controls (TikTok draws its video on a canvas, so the scrubber can't attach to it).
 - Videos start muted and on their own; sound follows your saved volume once Chrome allows it.
 - Keys only reach the popup after you click on the video, so typing in other cells is never intercepted. Then `A` / `D` seek back / forward 5 seconds (arrow keys stay with Sheets), plus `S` `K` `M` `H` `0`-`9` as usual (Instagram only). Click any cell to hand the keyboard back to Sheets.
-- If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), use **Open link** under the popup.
+- If a video can't be previewed (private post, TikTok short links like vm.tiktok.com, blocked embed), the popup says so and **Open link** under it opens the post. Moving to another cell with the keyboard closes the popup; click a link cell again to reopen it. Links made with `=HYPERLINK()` show as a formula in the formula bar and are not previewed.
 
 ## Behavior notes
 

@@ -63,3 +63,17 @@ test('surrounding whitespace and uppercase host are tolerated', () => {
     'https://www.tiktok.com/player/v1/123?autoplay=1'
   );
 });
+
+const { isSocialLink } = require('../embed-url.js');
+
+test('isSocialLink recognises TikTok and Instagram links that cannot be embedded', () => {
+  assert.equal(isSocialLink('https://vm.tiktok.com/ZMabc/'), 'https://vm.tiktok.com/ZMabc/');
+  assert.equal(isSocialLink(' https://www.tiktok.com/t/ZTabc/ '), 'https://www.tiktok.com/t/ZTabc/');
+  assert.equal(isSocialLink('https://www.instagram.com/someuser/'), 'https://www.instagram.com/someuser/');
+});
+
+test('isSocialLink ignores everything else', () => {
+  for (const s of ['', '3 Reality situations', '107', 'https://example.com/a', 'javascript:alert(1)']) {
+    assert.equal(isSocialLink(s), null, s);
+  }
+});
