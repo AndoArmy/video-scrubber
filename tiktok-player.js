@@ -67,9 +67,10 @@
       html = await getPage();
     }
     let parsed = parseTikTokVideo(html);
+    let solved = null;
     if (parsed.error === 'layout') {
       // TikTok's bot check answers with a puzzle page; answer it the way a real tab would and ask again.
-      const solved = solveWafChallenge(html);
+      solved = solveWafChallenge(html);
       if (solved) {
         status('bot check');
         await Promise.all(solved.cookies.map((c) => setCookie(c)));
@@ -78,7 +79,7 @@
         parsed = parseTikTokVideo(html);
       }
     }
-    if (parsed.error) return fallback(parsed.error);
+    if (parsed.error) return fallback(`${parsed.error}: ${describeTikTokPage(html)}${solved ? ', puzzle answered' : ''}`);
 
     // The video element streams the file itself (starts at once, seeks with range requests).
     const video = document.getElementById('v');

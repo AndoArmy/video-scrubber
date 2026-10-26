@@ -40,6 +40,21 @@
     return url && ownHost(url) ? { url } : { error: 'layout' };
   }
 
-  if (typeof module !== 'undefined' && module.exports) module.exports = { parseTikTokVideo };
-  else Object.assign(globalThis, { parseTikTokVideo });
+  // A short note on what a page was, for the popup's status line when parsing fails.
+  function describeTikTokPage(html) {
+    html = String(html || '');
+    if (!html.trim()) return 'empty page';
+    const m = /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__"[^>]*>([\s\S]*?)<\/script>/.exec(html);
+    if (!m) return `${html.length}B, ${/id="cs"/.test(html) ? 'puzzle' : 'no data blob'}`;
+    try {
+      const scope = JSON.parse(m[1]).__DEFAULT_SCOPE__ || {};
+      const d = scope['webapp.video-detail'];
+      return `${html.length}B, scope [${Object.keys(scope).join(',')}]${d ? `, status ${d.statusCode}` : ''}`;
+    } catch {
+      return `${html.length}B, data blob unreadable`;
+    }
+  }
+
+  if (typeof module !== 'undefined' && module.exports) module.exports = { parseTikTokVideo, describeTikTokPage };
+  else Object.assign(globalThis, { parseTikTokVideo, describeTikTokPage });
 })();

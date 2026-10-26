@@ -65,3 +65,14 @@ test('an h264 playAddr is used as is', () => {
   const html = page(detail({ video: { codecType: 'h264', playAddr: 'https://v16.tiktok.com/video/a.mp4', bitrateInfo: [{ CodecType: 'h264', Bitrate: 9, PlayAddr: { UrlList: ['https://v16.tiktok.com/video/b.mp4'] } }] } }));
   assert.deepEqual(parseTikTokVideo(html), { url: 'https://v16.tiktok.com/video/a.mp4' });
 });
+
+const { describeTikTokPage } = require('../tiktok-page.js');
+
+test('describeTikTokPage says what kind of page came back', () => {
+  assert.match(describeTikTokPage(''), /empty/);
+  assert.match(describeTikTokPage('<html><p id="cs" class="x"></p>Please wait...</html>'), /puzzle/);
+  assert.match(describeTikTokPage('<html>Verify to continue</html>'), /no data blob/);
+  const html = page({ 'webapp.video-detail': { statusCode: 10222, itemInfo: {} }, 'webapp.a-b': {} });
+  assert.match(describeTikTokPage(html), /status 10222/);
+  assert.match(describeTikTokPage(html), /webapp\.video-detail/);
+});
