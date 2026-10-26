@@ -83,14 +83,20 @@
       .icon svg { width: 14px; height: 14px; fill: #fff; }
       .icon .alt, .icon.flip .main { display: none; }
       .icon.flip .alt { display: block; }
-      .vol { display: flex; align-items: center; }
+      .vol { position: relative; display: flex; align-items: center; }
+      /* The slider floats over the bar. If it took up room in the row, opening it on a narrow bar
+         wrapped the row, the bar grew and the speaker jumped out from under the pointer, which
+         closed the slider again, and so on until the mouse moved. */
       .volume {
-        width: 0; margin: 0; opacity: 0; accent-color: #ffd400; cursor: pointer;
+        position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+        width: 70px; margin: 0; padding: 4px 8px; box-sizing: content-box;
+        background: rgba(12, 12, 14, 0.95); border-radius: 6px;
+        opacity: 0; accent-color: #ffd400; cursor: pointer;
         visibility: hidden; pointer-events: none; /* collapsed slider must not steal the speaker's clicks */
-        transition: width 0.15s, opacity 0.15s, margin 0.15s, visibility 0.15s;
+        transition: opacity 0.15s, visibility 0.15s;
       }
       .vol:hover .volume, .volume:focus {
-        width: 70px; margin-left: 6px; opacity: 1; visibility: visible; pointer-events: auto;
+        opacity: 1; visibility: visible; pointer-events: auto;
       }
       .speeds { display: flex; gap: 2px; margin-left: auto; }
       button {
