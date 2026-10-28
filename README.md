@@ -4,17 +4,17 @@ Chrome extension that adds a seek bar, speed buttons, keyboard shortcuts, and a 
 
 ## Install
 
-The Google Sheets preview is on the `feat/sheets-preview` branch until it is merged into `master`. The latest release zip does not have it.
+The Google Sheets preview is on `master` (1.6.0). The release zips (1.3.0 and older) do not have it, so install from git or from the zip of `master`.
 
 **Option A, git (easiest to update):**
 
 1. In a terminal, go to the folder you want to keep the extension in (for example `cd ~/Documents`), then run:
-   `git clone -b feat/sheets-preview https://github.com/AndoArmy/video-scrubber`
+   `git clone https://github.com/AndoArmy/video-scrubber`
    This makes a `video-scrubber` folder inside the folder you were in. That folder is the extension.
 2. Open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked**, and pick the `video-scrubber` folder.
 3. Reload any open Instagram / TikTok / Google Sheets tabs.
 
-**Option B, zip:** on the [branch page](https://github.com/AndoArmy/video-scrubber/tree/feat/sheets-preview) click **Code > Download ZIP**. Your browser saves it in its download folder (Downloads, by default). Unzip it and move the folder somewhere permanent (Documents, not Downloads): Chrome loads the extension from that folder every time, so deleting or moving it breaks the extension. Then do step 2 above.
+**Option B, zip:** on the [repo page](https://github.com/AndoArmy/video-scrubber) click **Code > Download ZIP**. Your browser saves it in its download folder (Downloads, by default). Unzip it and move the folder somewhere permanent (Documents, not Downloads): Chrome loads the extension from that folder every time, so deleting or moving it breaks the extension. Then do step 2 above.
 
 Chrome may show a "developer mode extensions" notice on startup. That's expected for extensions not installed from the Chrome Web Store.
 
