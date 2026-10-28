@@ -1,10 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Reels Scrubber",
-  "version": "1.4.2",
-  "description": "Seek bar, speed control, and a frame strip for videos on Instagram, TikTok, and Facebook.",
+  "version": "1.6.0",
+  "description": "Seek bar, speed control, and a frame strip for videos on Instagram, TikTok, and Facebook, plus video previews inside Google Sheets.",
   "permissions": [
-    "storage"
+    "storage",
+    "cookies",
+    "declarativeNetRequestWithHostAccess"
   ],
   "content_scripts": [
     {
@@ -17,11 +19,49 @@
         "content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://www.instagram.com/*/embed*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "*://docs.google.com/spreadsheets/*"
+      ],
+      "js": [
+        "embed-url.js",
+        "place.js",
+        "sheets.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "popup.html",
+        "tiktok-player.html"
+      ],
+      "matches": [
+        "https://docs.google.com/*"
+      ]
     }
   ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "host_permissions": [
+    "https://*.tiktok.com/*",
+    "https://*.tiktokcdn.com/*",
+    "https://*.tiktokcdn-us.com/*",
+    "https://*.tiktokv.com/*"
+  ]
 }

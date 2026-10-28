@@ -7,6 +7,10 @@
   const SPEEDS = [1, 1.5, 2, 3, 4];
   const FRAME_COUNT = 8;
   const SEEK_STEP = 5; // seconds per arrow key
+  // Only when our own popup page (an extension page) is the direct parent, never on other sites' Instagram embeds.
+  const IN_SHEETS_EMBED = window !== window.top && location.ancestorOrigins?.[0] === `chrome-extension://${chrome.runtime.id}`;
+  // The embed content-script entry matches every Instagram embed on the web; only our own popup's one gets a bar.
+  if (window !== window.top && !IN_SHEETS_EMBED) return;
   const MIN_VIDEO_SIZE = 120; // px; skips avatars, ad pixels, tiny previews
   const PICK_INTERVAL = 150; // ms between "which video is active" checks
   const GRID_MIN_VIDEOS = 3; // this many videos on screen at once = a grid (Explore, Discover, search); bar waits for a click
@@ -81,14 +85,20 @@
       .icon svg { width: 14px; height: 14px; fill: #fff; }
       .icon .alt, .icon.flip .main { display: none; }
       .icon.flip .alt { display: block; }
-      .vol { display: flex; align-items: center; }
+      .vol { position: relative; display: flex; align-items: center; }
+      /* The slider floats over the bar. If it took up room in the row, opening it on a narrow bar
+         wrapped the row, the bar grew and the speaker jumped out from under the pointer, which
+         closed the slider again, and so on until the mouse moved. */
       .volume {
-        width: 0; margin: 0; opacity: 0; accent-color: #ffd400; cursor: pointer;
+        position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+        width: 70px; margin: 0; padding: 4px 8px; box-sizing: content-box;
+        background: rgba(12, 12, 14, 0.95); border-radius: 6px;
+        opacity: 0; accent-color: #ffd400; cursor: pointer;
         visibility: hidden; pointer-events: none; /* collapsed slider must not steal the speaker's clicks */
-        transition: width 0.15s, opacity 0.15s, margin 0.15s, visibility 0.15s;
+        transition: opacity 0.15s, visibility 0.15s;
       }
       .vol:hover .volume, .volume:focus {
-        width: 70px; margin-left: 6px; opacity: 1; visibility: visible; pointer-events: auto;
+        opacity: 1; visibility: visible; pointer-events: auto;
       }
       .speeds { display: flex; gap: 2px; margin-left: auto; }
       button {
@@ -225,6 +235,21 @@
     if (active && active.playbackRate !== speed) active.playbackRate = speed;
     if (active) applySound(active);
     showStrip();
+    if (active && IN_SHEETS_EMBED) startInSheetsPopup(active);
+  }
+
+  // Inside the Sheets popup: tell popup.js a video exists, and start it muted (muted autoplay is
+  // always allowed; the sound logic above unmutes once Chrome lets it) so no click is needed per video.
+  let embedReadySent = false;
+  function startInSheetsPopup(v) {
+    if (!embedReadySent) {
+      embedReadySent = true;
+      window.parent.postMessage({ rsReady: true }, '*');
+    }
+    if (v.paused) {
+      v.muted = true;
+      v.play().catch(() => {});
+    }
   }
 
   // ---------- speed ----------
@@ -516,8 +541,15 @@
       if (!active || e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e.composedPath()[0])) return;
       const k = e.key;
-      if (k === 'ArrowLeft') seekTo(active.currentTime - SEEK_STEP);
-      else if (k === 'ArrowRight') seekTo(active.currentTime + SEEK_STEP);
+      if (IN_SHEETS_EMBED && k === 'Escape') {
+        window.top.postMessage({ rsClose: true }, '*'); // sheets.js closes the popup
+        return;
+      }
+      // In the Sheets popup, A / D seek and the arrows stay with Sheets.
+      const back = IN_SHEETS_EMBED ? k === 'a' || k === 'A' : k === 'ArrowLeft';
+      const forward = IN_SHEETS_EMBED ? k === 'd' || k === 'D' : k === 'ArrowRight';
+      if (back) seekTo(active.currentTime - SEEK_STEP);
+      else if (forward) seekTo(active.currentTime + SEEK_STEP);
       else if (k === 's' || k === 'S') cycleSpeed();
       else if (k === 'k' || k === 'K') togglePlay();
       else if (k === 'm' || k === 'M') toggleMute();
